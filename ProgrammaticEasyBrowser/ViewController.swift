@@ -9,54 +9,26 @@
 import UIKit
 import WebKit
 
-class ViewController: UIViewController, WKNavigationDelegate {
+class ViewController: UIViewController, WKNavigationDelegate { // promise to conform to WKNavigationDelegate protocol
+    
+    private var webView: WKWebView! // need to be stored as a property to be referenced later
+
+    override func loadView() {
+        super.loadView()
+        webView = WKWebView() // create an instance of WKWebView web browser component and assign it to the webView property
+        view.addSubview(webView) // put it in the view (no need for constraints; it will occupy the whole view)
+        webView.navigationDelegate = self // when any web page navigation happens, please tell me – the current view controller.
+        view = webView // make view (the root view of the view controller) that web view
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .orange
-        setWebView()
-        
-        webView = WKWebView()
-        webView.navigationDelegate = self
-        view = webView
-        
         self.title = "Easy Web Browser"
         self.navigationItem.rightBarButtonItem = rightBarButtonItem
         let url = URL(string: "https://www.hackingwithswift.com")!
         webView.load(URLRequest(url: url))
         webView.allowsBackForwardNavigationGestures = true
     }
-    
-    fileprivate func setTestView() {
-        view.addSubview(testView)
-        NSLayoutConstraint.activate([
-            testView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            testView.widthAnchor.constraint(equalTo: view.widthAnchor),
-            testView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
-        ])
-    }
-    
-    fileprivate func setWebView() {
-        view.addSubview(webView)
-        NSLayoutConstraint.activate([
-            webView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            webView.widthAnchor.constraint(equalTo: view.widthAnchor),
-            webView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
-        ])
-    }
-    
-    private let testView: UIView = {
-        let tv = UIView()
-        tv.translatesAutoresizingMaskIntoConstraints = false
-        tv.backgroundColor = .red
-        return tv
-    }()
-    
-    private var webView: WKWebView = {
-        let wv = WKWebView()
-        wv.translatesAutoresizingMaskIntoConstraints = false
-        return wv
-    }()
     
     private let rightBarButtonItem: UIBarButtonItem = {
         let barButtonItem = UIBarButtonItem(title: "Right Item", style: .plain, target: self, action: nil)
@@ -65,4 +37,3 @@ class ViewController: UIViewController, WKNavigationDelegate {
     }()
     
 }
-
