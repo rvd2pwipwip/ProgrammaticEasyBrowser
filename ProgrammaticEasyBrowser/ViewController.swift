@@ -13,6 +13,7 @@ class ViewController: UIViewController, WKNavigationDelegate { // promise to con
     
     private var webView: WKWebView! // need to be stored as a property to be referenced later
     private var progressView: UIProgressView!
+    private var websites = ["apple.com", "hackingwithswift.com", "google.com"]
 
     override func loadView() {
         super.loadView()
@@ -38,11 +39,13 @@ class ViewController: UIViewController, WKNavigationDelegate { // promise to con
         
         let spacer = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
         let refresh = UIBarButtonItem(barButtonSystemItem: .refresh, target: webView, action: #selector(webView.reload))
+        let back = UIBarButtonItem(barButtonSystemItem: .rewind, target: webView, action: #selector(webView.goBack))
+        let forward = UIBarButtonItem(barButtonSystemItem: .fastForward, target: webView, action: #selector(webView.goForward))
 
-        toolbarItems = [progressButton, spacer, refresh] // items of the toolbar, displayed in array order
+        toolbarItems = [back, spacer, progressButton, spacer, refresh, spacer, forward] // items of the toolbar, displayed in array order
         navigationController?.isToolbarHidden = false // need to manually show the toolbar
         
-        let url = URL(string: "https://www.stingray.com")!
+        let url = URL(string: "https://\(websites[2])")!
         webView.load(URLRequest(url: url))
         webView.allowsBackForwardNavigationGestures = true
     }
@@ -56,9 +59,12 @@ class ViewController: UIViewController, WKNavigationDelegate { // promise to con
     
     @objc func openTapped() {
         let ac = UIAlertController(title: "Open page…", message: nil, preferredStyle: .actionSheet) // no message for this action sheet
-        ac.addAction(UIAlertAction(title: "apple.com", style: .default, handler: openPage))
-        ac.addAction(UIAlertAction(title: "hackingwithswift.com", style: .default, handler: openPage))
-        ac.addAction(UIAlertAction(title: "google.com", style: .default, handler: openPage))
+//        ac.addAction(UIAlertAction(title: "apple.com", style: .default, handler: openPage))
+//        ac.addAction(UIAlertAction(title: "hackingwithswift.com", style: .default, handler: openPage))
+//        ac.addAction(UIAlertAction(title: "google.com", style: .default, handler: openPage))
+        for website in websites {
+            ac.addAction(UIAlertAction(title: website, style: .default, handler: openPage))
+        }
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel)) // no handler = dismiss alert controller on click
         ac.popoverPresentationController?.barButtonItem = self.navigationItem.rightBarButtonItem // for iPad action sheet pop up
         present(ac, animated: true)
@@ -71,6 +77,28 @@ class ViewController: UIViewController, WKNavigationDelegate { // promise to con
     
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) { // available through WKNavigationDelegate
         title = webView.title // navigationController title set to webView's title (most recent web page loaded)
+    }
+    // This delegate callback allows us to decide whether we want to allow navigation to happen or not every time something happens.
+    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        let url = navigationAction.request.url
+
+        if let host = url?.host { // Note: we need to unwrap this carefully because not all URLs have hosts.
+            for website in websites {
+                if host.contains(website) {
+                    decisionHandler(.allow)
+                    return
+                }
+            }
+        }
+
+        decisionHandler(.cancel)
+        blockedWarning()
+    }
+    
+    @objc func blockedWarning() {
+        let ac = UIAlertController(title: "This link is blocked", message: "Navigating to this website is not allowed", preferredStyle: .alert)
+        ac.addAction(UIAlertAction(title: "OK", style: .default))
+        present(ac, animated: true)
     }
     
 //    private let rightBarButtonItem: UIBarButtonItem = {
